@@ -32,6 +32,8 @@ def tts(talk):
     client_socket.connect(('172.22.168.86', 12345))
     client_socket.sendall(talk.encode('utf-8'))
     receive_file('audio.wav', client_socket)
+    time.sleep(5)
+
 
     try:
         command = 'sox audio.wav robot_voice.wav overdrive 10 echo 0.8 0.88 60 0.4 chorus 0.7 0.9 55 0.4 0.25 2 -s'
@@ -40,23 +42,30 @@ def tts(talk):
     except subprocess.CalledProcessError as e:
         print(f"Error running TTS: {e}")
 
-    playsound('robot_voice.wav')
+    playsound('./robot_voice.wav')
     os.remove('audio.wav')
 
 def stt():
+
     while(1):
-       # with sr.Microphone() as source:
-       #     print("Say something!")
-       #     #audio = r.listen(source)
-       #     audio = "speak about the chaos gods"
-       # try:
-            #phrase = r.recognize_google(audio)
-        phrase = "Magos speak about the chaos gods"
-        result = ollama_talker(phrase)
-        tts(result)
+        with sr.Microphone() as source:
+            print("Say something!")
+            audio = r.listen(source)
+        try:
+            phrase = r.recognize_google(audio)
+            print("Google Speech Recognition thinks you said " + phrase)
+            if ("Migos" in phrase or "migos" in phrase):
+                phrase = phrase.replace('Migos', '')
+                result = ollama_talker(phrase)
+                model_name="tts_models/multilingual/multi-dataset/xtts_v2",
+                tts(result)
+                time.sleep(1)
+
+        except sr.UnknownValueError:
+            print("Google Speech Recognition could not understand audio")
+        except sr.RequestError as e:
+            print("Could not request results from Google Speech Recognition service; {0}".format(e))
         time.sleep(1)
-
-
 
 def ollama_talker(phrase):
     print("this was the phrase ")
